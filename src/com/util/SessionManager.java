@@ -1,0 +1,50 @@
+package com.util;
+
+import java.util.List;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.service.ServiceRegistry;
+
+public class SessionManager {
+	private static final SessionFactory sessionFactory = buildSessionFactory();
+
+	private static SessionFactory buildSessionFactory() {
+		try {
+			Configuration configuration = new Configuration().configure();
+
+			StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties());
+		
+			return configuration.buildSessionFactory(builder.build());
+
+		} catch (Throwable ex) {
+			// Make sure you log the exception, as it might be swallowed
+			ex.printStackTrace();
+
+			throw new ExceptionInInitializerError(ex);
+		}
+	}
+
+	public static SessionFactory getSessionFactory() {
+		return sessionFactory;
+	}
+
+	public static Session openSession() {
+		return getSessionFactory().openSession();
+	}
+
+	public static void deleteAll(String type) {
+		Session session = openSession();
+		Transaction tx = session.beginTransaction();
+		List elements = session.createQuery("from " + type + " b").list();
+		for (Object o : elements) {
+			session.delete(o);
+		}
+		tx.commit();
+		session.close();
+	}
+}
